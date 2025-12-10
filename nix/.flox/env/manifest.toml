@@ -2,7 +2,7 @@ version = 1
 
 [include]
   [[include.environments]]
-    remote = 'nxmatic/keyhole'
+    dir = '/var/lib/gits/nxmatic/fleet-manifests/flox/keyhole'
 
 [install]
   [install.cachix]

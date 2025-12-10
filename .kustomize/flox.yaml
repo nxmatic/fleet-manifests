@@ -1,25 +1,28 @@
+apiVersion: kpt.dev/v1
+kind: Kptfile
+metadata:
+  name: flox-manifests
+pipeline:
+  mutators:
+    - image: ghcr.io/kptdev/krm-functions-catalog/apply-setters:v0.2
+      configPath: setters.yaml
+---
 apiVersion: flox.dev/v1alpha1
 kind: FloxEnvironment
 metadata:
   name: git
 spec:
-  env:
-    name: git
-    version: 1
   manifest:
-    include:
-      environments:
-      - remote: nxmatic/keyhole
+    version: 1
     install:
-      gh:
-        pkg-path: gh
       git:
         pkg-path: git
       git-town:
         pkg-path: git-town
       gitflow:
         pkg-path: gitflow
-    options: {}
+      gh:
+        pkg-path: gh
     profile:
       common: |
         if [ -d "${FLOX_ENV_PROJECT}/.github" ]; then
@@ -43,6 +46,12 @@ spec:
             fi
           fi
         fi
+    include:
+      environments:
+        - dir: /var/lib/gits/nxmatic/fleet-manifests/flox/keyhole # kpt-set: ${fleet-base-dir}/keyhole
+    options: {}
+  env:
+    name: git
     version: 1
 ---
 apiVersion: flox.dev/v1alpha1
@@ -50,27 +59,21 @@ kind: FloxEnvironment
 metadata:
   name: home
 spec:
-  env:
-    name: home
-    version: 1
   manifest:
-    include:
-      environments:
-      - remote: nxmatic/xdg
-      - remote: nxmatic/keyhole
+    version: 1
     install:
       direnv:
         pkg-path: direnv
       linux-builder:
         pkg-path: darwin.linux-builder
         systems:
-        - aarch64-darwin
+          - aarch64-darwin
       lldpd:
         pkg-path: lldpd
     options:
       systems:
-      - aarch64-darwin
-      - aarch64-linux
+        - aarch64-darwin
+        - aarch64-linux
     profile:
       common: |
         mvnw_path="${FLOX_ENV_PROJECT}/mvnw"
@@ -101,6 +104,12 @@ spec:
             export MAVEN_VERSION="${maven_version_output}"
           fi
         fi
+    include:
+      environments:
+        - dir: /var/lib/gits/nxmatic/fleet-manifests/flox/xdg # kpt-set: ${fleet-base-dir}/xdg
+        - dir: /var/lib/gits/nxmatic/fleet-manifests/flox/keyhole # kpt-set: ${fleet-base-dir}/keyhole
+  env:
+    name: home
     version: 1
 ---
 apiVersion: flox.dev/v1alpha1
@@ -108,82 +117,82 @@ kind: FloxEnvironment
 metadata:
   name: k8s
 spec:
-  env:
-    name: k8s
-    version: 1
   manifest:
+    version: 1
     install:
       ceph-client:
-        pkg-group: kubectl-tools
         pkg-path: ceph-client
-        systems:
-        - aarch64-linux
-      cilium-cli:
         pkg-group: kubectl-tools
+        systems:
+          - aarch64-linux
+      cilium-cli:
         pkg-path: cilium-cli
+        pkg-group: kubectl-tools
       dasel:
-        pkg-group: yaml-tools
         pkg-path: dasel
         version: ^2.8.1
+        pkg-group: yaml-tools
       etcdctl:
-        pkg-group: etcd-tools
         pkg-path: etcdctl
         version: ^3.3.27
+        pkg-group: etcd-tools
       fluxcd:
-        pkg-group: kubectl-tools
         pkg-path: fluxcd
+        pkg-group: kubectl-tools
       helmfile:
-        pkg-group: kubectl-tools
         pkg-path: helmfile
-      kpt:
-        pkg-group: kpt-tools
-        pkg-path: kpt
-      krew:
         pkg-group: kubectl-tools
-        pkg-path: krew
-      kubecectl-doctor:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-doctor
-      kubectl:
-        pkg-group: kubectl-tools
-        pkg-path: kubectl
-      kubectl-ai:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-ai
-      kubectl-explore:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-explore
-      kubectl-graph:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-graph
-      kubectl-ktop:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-ktop
-      kubectl-neat:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-neat
-      kubectl-rook-ceph:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-rook-ceph
-      kubectl-tree:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-tree
-      kubectl-view-secret:
-        pkg-group: kubectl-plugins
-        pkg-path: kubectl-view-secret
       kubernetes-helm:
-        pkg-group: kubectl-tools
         pkg-path: kubernetes-helm
-      tubekit:
         pkg-group: kubectl-tools
+      kubectl:
+        pkg-path: kubectl
+        pkg-group: kubectl-tools
+      krew:
+        pkg-path: krew
+        pkg-group: kubectl-tools
+      kubectl-ai:
+        pkg-path: kubectl-ai
+        pkg-group: kubectl-plugins
+      kubectl-ktop:
+        pkg-path: kubectl-ktop
+        pkg-group: kubectl-plugins
+      kubectl-neat:
+        pkg-path: kubectl-neat
+        pkg-group: kubectl-plugins
+      kubectl-tree:
+        pkg-path: kubectl-tree
+        pkg-group: kubectl-plugins
+      kubectl-graph:
+        pkg-path: kubectl-graph
+        pkg-group: kubectl-plugins
+      kubecectl-doctor:
+        pkg-path: kubectl-doctor
+        pkg-group: kubectl-plugins
+      kubectl-explore:
+        pkg-path: kubectl-explore
+        pkg-group: kubectl-plugins
+      kubectl-rook-ceph:
+        pkg-path: kubectl-rook-ceph
+        pkg-group: kubectl-plugins
+      kubectl-view-secret:
+        pkg-path: kubectl-view-secret
+        pkg-group: kubectl-plugins
+      tubekit:
         pkg-path: tubekit
+        pkg-group: kubectl-tools
       yq-go:
-        pkg-group: yaml-tools
         pkg-path: yq-go
+        pkg-group: yaml-tools
+      kpt:
+        pkg-path: kpt
+        pkg-group: kpt-tools
     options:
       systems:
-      - aarch64-darwin
-      - aarch64-linux
+        - aarch64-darwin
+        - aarch64-linux
+  env:
+    name: k8s
     version: 1
 ---
 apiVersion: flox.dev/v1alpha1
@@ -191,24 +200,21 @@ kind: FloxEnvironment
 metadata:
   name: keyhole
 spec:
-  env:
-    name: keyhole
-    version: 1
   manifest:
+    version: 1
     install:
       age:
         pkg-path: age
-      gnupg:
-        pkg-path: gnupg
+      ssh-to-age:
+        pkg-path: ssh-to-age
       keychain:
         pkg-path: keychain
+      gnupg:
+        pkg-path: gnupg
       pass:
         pkg-path: pass
       sops:
         pkg-path: sops
-      ssh-to-age:
-        pkg-path: ssh-to-age
-    options: {}
     profile:
       common: |
         if [[ -r $XDG_STATE_HOME/ssh-keys.d/github_signing ]]; then
@@ -216,17 +222,28 @@ spec:
           SOPS_AGE_KEY="$( ssh-to-age -private-key < $XDG_STATE_HOME/ssh-keys.d/github_signing )"
           set +a
         fi
+    options: {}
+  env:
+    name: keyhole
     version: 1
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - git.yaml
+  - home.yaml
+  - k8s.yaml
+  - keyhole.yaml
+  - lima.yaml
+  - nix.yaml
 ---
 apiVersion: flox.dev/v1alpha1
 kind: FloxEnvironment
 metadata:
   name: lima
 spec:
-  env:
-    name: lima
-    version: 1
   manifest:
+    version: 1
     install:
       lima:
         pkg-path: lima
@@ -234,8 +251,10 @@ spec:
         pkg-path: darwin.apple_sdk.frameworks.vmnet
     options:
       systems:
-      - aarch64-darwin
-      - x86_64-darwin
+        - aarch64-darwin
+        - x86_64-darwin
+  env:
+    name: lima
     version: 1
 ---
 apiVersion: flox.dev/v1alpha1
@@ -243,35 +262,42 @@ kind: FloxEnvironment
 metadata:
   name: nix
 spec:
+  manifest:
+    version: 1
+    install:
+      nixd:
+        pkg-path: nixd
+      nix-tree:
+        pkg-path: nix-tree
+      nixfmt-rfc-style:
+        pkg-path: nixfmt-rfc-style
+      statix:
+        pkg-path: statix
+      deadnix:
+        pkg-path: deadnix
+      nix-output-monitor:
+        pkg-path: nix-output-monitor
+      nix-eval-jobs:
+        pkg-path: nix-eval-jobs
+      cachix:
+        pkg-path: cachix
+      watchexec:
+        pkg-path: watchexec
+      nvfetcher:
+        pkg-path: nvfetcher
+      nix-fast-build:
+        pkg-path: nix-fast-build
+    include:
+      environments:
+        - dir: /var/lib/gits/nxmatic/fleet-manifests/flox/keyhole # kpt-set: ${fleet-base-dir}/keyhole
+    options: {}
   env:
     name: nix
     version: 1
-  manifest:
-    include:
-      environments:
-      - remote: nxmatic/keyhole
-    install:
-      cachix:
-        pkg-path: cachix
-      deadnix:
-        pkg-path: deadnix
-      nix-eval-jobs:
-        pkg-path: nix-eval-jobs
-      nix-fast-build:
-        pkg-path: nix-fast-build
-      nix-output-monitor:
-        pkg-path: nix-output-monitor
-      nix-tree:
-        pkg-path: nix-tree
-      nixd:
-        pkg-path: nixd
-      nixfmt-rfc-style:
-        pkg-path: nixfmt-rfc-style
-      nvfetcher:
-        pkg-path: nvfetcher
-      statix:
-        pkg-path: statix
-      watchexec:
-        pkg-path: watchexec
-    options: {}
-    version: 1
+---
+apiVersion: fn.kpt.dev/v1alpha1
+kind: ApplySetters
+metadata:
+  name: fleet-base-dir
+data:
+  fleet-base-dir: /var/lib/gits/nxmatic/fleet-manifests/flox
