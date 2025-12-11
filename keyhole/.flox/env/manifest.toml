@@ -23,9 +23,9 @@ version = 1
 
 [profile]
   common = """
-  if [[ -r $XDG_STATE_HOME/ssh-keys.d/github_signing ]]; then
-    set -a
-    SOPS_AGE_KEY="$( ssh-to-age -private-key < $XDG_STATE_HOME/ssh-keys.d/github_signing )"
-    set +a
-  fi
+    if [[ -r $XDG_STATE_HOME/ssh-keys.d/github_signing ]]; then
+      set -a
+      SOPS_AGE_KEY="$( ssh-to-age -private-key < $XDG_STATE_HOME/ssh-keys.d/github_signing )"
+      set +a
+    fi
   """
