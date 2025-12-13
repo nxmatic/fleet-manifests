@@ -1,9 +1,10 @@
 FLOX_DIR ?= flox
+YQ ?= yq
 FLOX_REMOTE ?= origin
 FLOX_BRANCH ?= flox-subtree
 
-SHELL ?= bash
-.SHELLFLAGS := -euo pipefail -c
+SHELL := bash
+.SHELLFLAGS := -euxo pipefail -c
 .ONESHELL:
 
 .PHONY: update-flox check-flox-clean finalize-merge flox-refresh-locks flox-update-sync
@@ -42,32 +43,41 @@ finalize-merge:
 	fi
 
 flox-refresh-locks:
-	: "Refreshing flox manifest.lock files under $(FLOX_DIR) respecting include dependencies..."
-	ROOT="$$(pwd -P)"
-	FLOX_PATH="$$ROOT/$(FLOX_DIR)"
-	shopt -s nullglob
-	declare -A refreshed
-	refresh_env() {
-		local env_dir="$$1"
-		if [ -z "$$env_dir" ] || [ ! -d "$$env_dir/.flox" ]; then
-			return 0
-		fi
-		if [[ -n "${refreshed[$$env_dir]+set}" ]]; then
-			return 0
-		fi
-		local manifest="$$env_dir/.flox/env/manifest.toml"
-		if [ -f "$$manifest" ]; then
-			while IFS= read -r include_dir; do
-				[ -z "$$include_dir" ] && continue
-				case "$$include_dir" in
-					"$$FLOX_PATH"/*) refresh_env "$$include_dir" ;
-				esac
-			done < <(sed -n "s|^[[:space:]]*dir = '\(.*\)'|\1|p" "$$manifest")
-		fi
-		echo "  - updating $$env_dir"
-		flox upgrade --dir "$$env_dir" >/dev/null
-		refreshed["$$env_dir"]=1
-	}
-	for env_dir in "$$FLOX_PATH"/*; do
-		refresh_env "$$env_dir"
+	@echo "Refreshing flox manifest.lock files under $(FLOX_DIR) respecting include dependencies..."
+	@ROOT="$$(pwd -P)"; \
+	FLOX_PATH="$$ROOT/$(FLOX_DIR)"; \
+	shopt -s nullglob; \
+	declare -A refreshed; \
+	refresh_env() { \
+		local env_dir="$$1"; \
+		if [ -z "$$env_dir" ] || [ ! -d "$$env_dir/.flox" ]; then \
+			return 0; \
+		fi; \
+		if [[ -n "${refreshed[$$env_dir]+set}" ]]; then \
+			return 0; \
+		fi; \
+		local env_name="$$(basename "$$env_dir")"; \
+		local descriptor="$$env_dir/$$env_name.yaml"; \
+		local manifest="$$env_dir/.flox/env/manifest.toml"; \
+		if [ -f "$$descriptor" ] && command -v $(YQ) >/dev/null 2>&1; then \
+			while IFS= read -r include_dir; do \
+				[ -z "$$include_dir" ] && continue; \
+				case "$$include_dir" in \
+					"$$FLOX_PATH"/*) refresh_env "$$include_dir" ;; \
+				esac; \
+			done < <($(YQ) eval '(.includes // [])[]' "$$descriptor" 2>/dev/null || true); \
+		elif [ -f "$$manifest" ]; then \
+			while IFS= read -r include_dir; do \
+				[ -z "$$include_dir" ] && continue; \
+				case "$$include_dir" in \
+					"$$FLOX_PATH"/*) refresh_env "$$include_dir" ;; \
+				esac; \
+			done < <(sed -n "s|^[[:space:]]*dir = '\(.*\)'|\1|p" "$$manifest"); \
+		fi; \
+		echo "  - updating $$env_dir"; \
+		flox upgrade --dir "$$env_dir" >/dev/null; \
+		refreshed["$$env_dir"]=1; \
+	}; \
+	for env_dir in "$$FLOX_PATH"/*; do \
+		refresh_env "$$env_dir"; \
 	done
